@@ -900,13 +900,19 @@ function logout() {
   isAdmin = false;
   guestName = '';
   bookings = [];
-  document.getElementById('app').classList.remove('visible');
-  document.getElementById('app').style.display = 'none';
+  // Reset app
+  const app = document.getElementById('app');
+  app.classList.remove('visible');
+  app.style.display = 'none';
   document.getElementById('admin-pill').style.display = 'none';
+  document.getElementById('booking-list').innerHTML = '<div class="empty-state">Loading bookings…</div>';
+  // Show lock screen fresh
   const ls = document.getElementById('lock-screen');
   ls.style.display = 'flex';
+  ls.style.opacity = '1';
   ls.classList.remove('hidden');
   document.getElementById('pw-input').value = '';
+  document.getElementById('pw-input').focus();
 }
 
 // ============================================================
