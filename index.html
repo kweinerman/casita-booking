@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Casita de Abuela · Arizona</title>
+<title>Casita De Abuela · Arizona</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
@@ -462,8 +462,7 @@
 <div id="lock-screen">
   <div class="lock-card">
     <div class="cactus">🌵</div>
-    <h1>Casa <span>Weinerman</span></h1>
-    <p>Scottsdale · Private Access</p>
+    <h1>Casita <span>De Abuela</span></h1>
     <input type="password" id="pw-input" placeholder="Enter passcode" autocomplete="off">
     <button class="btn-primary" onclick="checkPassword()">Enter</button>
   </div>
@@ -473,7 +472,7 @@
 <div id="app">
   <header>
     <div>
-      <h1>Casa <span>Weinerman</span></h1>
+      <h1>Casita <span>De Abuela</span></h1>
     </div>
     <p>Scottsdale, Arizona 🌵</p>
   </header>
@@ -545,16 +544,18 @@
 // ============================================================
 // CONFIG — paste your values here
 // ============================================================
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZvnhjmuhOY_eF47A7M0pV0et83BRUh2sb6fb0tage8sh4jBwQ8FyGVWUTZZG5GZljRQ/exec';
-const API_SECRET = 'casita1!';        // must match Code.gs
-const SITE_PASSWORD = 'casita1!';         // family site password
+const SCRIPT_URL     = 'YOUR_APPS_SCRIPT_URL_HERE';
+const API_SECRET     = 'casita2024';       // must match Code.gs
+const SITE_PASSWORD  = 'casita';           // family site password
+const ADMIN_PASSWORD = 'casita-admin';     // change this to something private
 
 // ============================================================
 // STATE
 // ============================================================
-let bookings   = [];
+let bookings      = [];
 let currentYear, currentMonth;
-let guestName  = '';
+let guestName     = '';
+let isAdmin       = false;
 
 // ============================================================
 // PASSWORD GATE
@@ -562,12 +563,15 @@ let guestName  = '';
 function checkPassword() {
   const input = document.getElementById('pw-input');
   const val = input.value.trim();
-  if (val === SITE_PASSWORD) {
+  if (val === SITE_PASSWORD || val === ADMIN_PASSWORD) {
+    isAdmin = val === ADMIN_PASSWORD;
     sessionStorage.setItem('casita_auth', '1');
+    sessionStorage.setItem('casita_admin', isAdmin ? '1' : '0');
     document.getElementById('lock-screen').classList.add('hidden');
     setTimeout(() => {
       document.getElementById('lock-screen').style.display = 'none';
       document.getElementById('app').classList.add('visible');
+      if (isAdmin) showAdminBadge();
       init();
     }, 500);
   } else {
@@ -583,8 +587,10 @@ document.getElementById('pw-input').addEventListener('keydown', e => {
 
 // Auto-unlock if already authenticated this session
 if (sessionStorage.getItem('casita_auth') === '1') {
+  isAdmin = sessionStorage.getItem('casita_admin') === '1';
   document.getElementById('lock-screen').style.display = 'none';
   document.getElementById('app').classList.add('visible');
+  if (isAdmin) showAdminBadge();
 }
 
 // ============================================================
@@ -693,7 +699,7 @@ function renderCalendar() {
     if (isPast)  el.classList.add('past');
 
     if (booking) {
-      const isMine = booking.title.includes(guestName) && guestName;
+      const isMine = isAdmin || (booking.title.includes(guestName) && guestName);
       el.classList.add(isMine ? 'mine' : 'booked');
 
       // Span styling
@@ -760,7 +766,7 @@ function renderList() {
 
   list.innerHTML = '';
   upcoming.forEach(b => {
-    const isMine = b.title.includes(guestName) && guestName;
+    const isMine = isAdmin || (b.title.includes(guestName) && guestName);
     const s = new Date(b.start);
     const e = new Date(b.end);
     e.setDate(e.getDate() - 1);
@@ -857,6 +863,22 @@ async function confirmCancel(eventId) {
   } catch(e) {
     showToast('Error: ' + e.message);
   }
+}
+
+// ============================================================
+// ADMIN BADGE
+// ============================================================
+function showAdminBadge() {
+  const badge = document.createElement('div');
+  badge.style.cssText = `
+    position:fixed; top:14px; right:16px; z-index:200;
+    background:var(--clay); color:white;
+    font-size:0.72rem; font-weight:500; letter-spacing:0.08em;
+    text-transform:uppercase; padding:5px 12px;
+    border-radius:100px; pointer-events:none;
+  `;
+  badge.textContent = '⚙ Admin';
+  document.body.appendChild(badge);
 }
 
 // ============================================================
