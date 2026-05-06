@@ -134,6 +134,30 @@
     text-transform: uppercase;
     text-align: right;
   }
+  .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  .btn-logout {
+    padding: 5px 13px;
+    background: transparent;
+    border: 1.5px solid var(--sand2);
+    border-radius: 100px;
+    font-family: var(--font-body);
+    font-size: 0.74rem;
+    color: var(--ink);
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-logout:hover { border-color: var(--clay); color: var(--clay); }
+  .admin-pill {
+    background: var(--clay);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 100px;
+  }
 
   /* ── LEGEND ──────────────────────────────────────────────── */
   .legend {
@@ -462,7 +486,7 @@
 <div id="lock-screen">
   <div class="lock-card">
     <div class="cactus">🌵</div>
-    <h1> <span>De Abuela</span></h1>
+    <h1>Casita <span>De Abuela</span></h1>
     <input type="password" id="pw-input" placeholder="Enter passcode" autocomplete="off">
     <button class="btn-primary" onclick="checkPassword()">Enter</button>
   </div>
@@ -472,9 +496,15 @@
 <div id="app">
   <header>
     <div>
-      <h1> <span>De Abuela</span></h1>
+      <h1>Casita <span>De Abuela</span></h1>
     </div>
-    <p>Scottsdale, Arizona 🌵</p>
+    <div class="header-right">
+      <p>Scottsdale, Arizona 🌵</p>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span id="admin-pill" class="admin-pill" style="display:none">⚙ Admin</span>
+        <button class="btn-logout" onclick="logout()">Log out</button>
+      </div>
+    </div>
   </header>
 
   <div class="loading-bar" id="loading-bar"></div>
@@ -544,8 +574,8 @@
 // ============================================================
 // CONFIG — paste your values here
 // ============================================================
-const SCRIPT_URL     = 'YOUR_APPS_SCRIPT_URL_HERE';
-const API_SECRET     = 'casita2024';       // must match Code.gs
+const SCRIPT_URL     = 'https://script.google.com/macros/s/AKfycbzZvnhjmuhOY_eF47A7M0pV0et83BRUh2sb6fb0tage8sh4jBwQ8FyGVWUTZZG5GZljRQ/exec';
+const API_SECRET     = 'casita2026';       // must match Code.gs
 const SITE_PASSWORD  = 'casita1!';           // family site password
 const ADMIN_PASSWORD = 'casita-admin';     // change this to something private
 
@@ -571,7 +601,6 @@ function checkPassword() {
     setTimeout(() => {
       document.getElementById('lock-screen').style.display = 'none';
       document.getElementById('app').classList.add('visible');
-      if (isAdmin) showAdminBadge();
       init();
     }, 500);
   } else {
@@ -590,7 +619,6 @@ if (sessionStorage.getItem('casita_auth') === '1') {
   isAdmin = sessionStorage.getItem('casita_admin') === '1';
   document.getElementById('lock-screen').style.display = 'none';
   document.getElementById('app').classList.add('visible');
-  if (isAdmin) showAdminBadge();
 }
 
 // ============================================================
@@ -600,15 +628,13 @@ function init() {
   const now = new Date();
   currentYear  = now.getFullYear();
   currentMonth = now.getMonth();
+  if (isAdmin) document.getElementById('admin-pill').style.display = 'inline-block';
   fetchBookings();
 }
 
-// If app already visible on load (session), also init
+// Single init path — works for both fresh login and session restore
 if (sessionStorage.getItem('casita_auth') === '1') {
-  const now = new Date();
-  currentYear  = now.getFullYear();
-  currentMonth = now.getMonth();
-  setTimeout(fetchBookings, 100);
+  init();
 }
 
 // ============================================================
@@ -866,19 +892,21 @@ async function confirmCancel(eventId) {
 }
 
 // ============================================================
-// ADMIN BADGE
+// LOGOUT
 // ============================================================
-function showAdminBadge() {
-  const badge = document.createElement('div');
-  badge.style.cssText = `
-    position:fixed; top:14px; right:16px; z-index:200;
-    background:var(--clay); color:white;
-    font-size:0.72rem; font-weight:500; letter-spacing:0.08em;
-    text-transform:uppercase; padding:5px 12px;
-    border-radius:100px; pointer-events:none;
-  `;
-  badge.textContent = '⚙ Admin';
-  document.body.appendChild(badge);
+function logout() {
+  sessionStorage.removeItem('casita_auth');
+  sessionStorage.removeItem('casita_admin');
+  isAdmin = false;
+  guestName = '';
+  bookings = [];
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('admin-pill').style.display = 'none';
+  const ls = document.getElementById('lock-screen');
+  ls.style.display = 'flex';
+  ls.classList.remove('hidden');
+  document.getElementById('pw-input').value = '';
 }
 
 // ============================================================
