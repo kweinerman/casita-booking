@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Casita De Abuelas · Arizona</title>
+<title>Casita De Abuela · Arizona</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
@@ -442,6 +442,37 @@
   }
   .modal-error.show { display: block; }
 
+  /* ── ROOM PICKER ─────────────────────────────────────────── */
+  .room-picker { display: flex; gap: 8px; margin-bottom: 18px; }
+  .room-btn {
+    flex: 1;
+    padding: 10px 8px;
+    border: 1.5px solid var(--sand2);
+    border-radius: 8px;
+    background: white;
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    color: var(--ink);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    line-height: 1.3;
+  }
+  .room-btn:hover { border-color: var(--clay); }
+  .room-btn.selected { background: #FBF0EB; border-color: var(--clay); color: var(--clay-deep); font-weight: 500; }
+  .room-tag {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 100px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .tag-room1  { background: #EBF1FA; color: #1E4F8C; }
+  .tag-room2  { background: #EAF4EE; color: #2A6B3E; }
+  .tag-whole  { background: #FBF0EB; color: var(--clay-deep); }
+
   /* ── LOADING ─────────────────────────────────────────────── */
   .loading-bar {
     height: 3px;
@@ -486,7 +517,7 @@
 <div id="lock-screen">
   <div class="lock-card">
     <div class="cactus">🌵</div>
-    <h1>Casita <span>De Abuelas</span></h1>
+    <h1>Casita <span>De Abuela</span></h1>
     <input type="password" id="pw-input" placeholder="Enter passcode" autocomplete="off">
     <button class="btn-primary" onclick="checkPassword()">Enter</button>
   </div>
@@ -496,7 +527,7 @@
 <div id="app">
   <header>
     <div>
-      <h1>Casita <span>De Abuelas</span></h1>
+      <h1>Casita <span>De Abuela</span></h1>
     </div>
     <div class="header-right">
       <p>Scottsdale, Arizona 🌵</p>
@@ -559,6 +590,15 @@
         <input type="date" id="f-checkout">
       </div>
     </div>
+    <div class="form-row">
+      <label>Room</label>
+      <div class="room-picker">
+        <button type="button" class="room-btn" id="btn-room1" onclick="selectRoom('Room 1')">🛏️ Room 1</button>
+        <button type="button" class="room-btn" id="btn-room2" onclick="selectRoom('Room 2')">🛏️ Room 2</button>
+        <button type="button" class="room-btn" id="btn-whole" onclick="selectRoom('Whole House')">🏠 Whole House</button>
+      </div>
+    </div>
+    <input type="hidden" id="f-room">
     <input type="hidden" id="f-event-id">
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeModal()">Cancel</button>
@@ -798,11 +838,12 @@ function renderList() {
     e.setDate(e.getDate() - 1);
     const nights = Math.round((new Date(b.end) - new Date(b.start)) / 86400000);
 
+    const roomTag = b.room === 'Room 1' ? 'tag-room1' : b.room === 'Room 2' ? 'tag-room2' : 'tag-whole';
     const card = document.createElement('div');
     card.className = 'booking-card' + (isMine ? ' mine' : '');
     card.innerHTML = `
       <div style="flex:1">
-        <div class="bc-name">${b.title.replace('🏡 ','')}</div>
+        <div class="bc-name">${b.title.replace('🏡 ','').split(' · ')[0]}<span class="room-tag ${roomTag}">${b.room || 'Whole House'}</span></div>
         <div class="bc-dates">${fmtDate(s)} → ${fmtDate(e)}</div>
         <div class="bc-nights">${nights} night${nights !== 1 ? 's' : ''}</div>
       </div>
@@ -819,15 +860,27 @@ function renderList() {
 // ============================================================
 // MODAL
 // ============================================================
+function selectRoom(room) {
+  document.getElementById('f-room').value = room;
+  ['btn-room1','btn-room2','btn-whole'].forEach(id => {
+    document.getElementById(id).classList.remove('selected');
+  });
+  const map = { 'Room 1': 'btn-room1', 'Room 2': 'btn-room2', 'Whole House': 'btn-whole' };
+  document.getElementById(map[room]).classList.add('selected');
+}
+
 function openModal(prefill) {
   document.getElementById('modal-title').textContent = prefill ? 'Edit Your Stay' : 'Book Your Stay';
   document.getElementById('modal-submit').textContent = prefill ? 'Save Changes' : 'Confirm Booking';
   document.getElementById('f-event-id').value = prefill ? prefill.id : '';
   document.getElementById('f-name').value     = prefill
-    ? prefill.title.replace('🏡 ','')
+    ? prefill.title.replace('🏡 ','').split(' · ')[0]
     : (guestName || '');
   document.getElementById('f-checkin').value  = prefill ? toYMD(new Date(prefill.start)) : '';
   document.getElementById('f-checkout').value = prefill ? toYMD(new Date(prefill.end))   : '';
+  // Set room selection
+  const defaultRoom = prefill ? (prefill.room || 'Whole House') : 'Whole House';
+  selectRoom(defaultRoom);
   document.getElementById('modal-error').classList.remove('show');
   document.getElementById('modal').classList.add('open');
 }
@@ -838,11 +891,12 @@ async function submitBooking() {
   const name     = document.getElementById('f-name').value.trim();
   const checkIn  = document.getElementById('f-checkin').value;
   const checkOut = document.getElementById('f-checkout').value;
+  const room     = document.getElementById('f-room').value || 'Whole House';
   const eventId  = document.getElementById('f-event-id').value;
   const errEl    = document.getElementById('modal-error');
   const btn      = document.getElementById('modal-submit');
 
-  if (!name || !checkIn || !checkOut) {
+  if (!name || !checkIn || !checkOut || !room) {
     errEl.textContent = 'Please fill in all fields.';
     errEl.classList.add('show');
     return;
@@ -859,8 +913,8 @@ async function submitBooking() {
 
   try {
     const params = eventId
-      ? { action: 'editBooking',   eventId, guestName: name, checkIn, checkOut }
-      : { action: 'createBooking', guestName: name, checkIn, checkOut };
+      ? { action: 'editBooking',   eventId, guestName: name, checkIn, checkOut, room }
+      : { action: 'createBooking', guestName: name, checkIn, checkOut, room };
 
     const data = await apiCall(params);
     if (data.error) throw new Error(data.error);
