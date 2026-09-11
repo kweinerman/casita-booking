@@ -614,7 +614,7 @@
 // ============================================================
 // CONFIG — paste your values here
 // ============================================================
-const SCRIPT_URL     = 'https://script.google.com/macros/s/AKfycbzhff4fvMKA3oZSkA7e2S4amIa55CR6V3TUhjjM4qiwnzzMMl4Vw-bWYGgW7TJPKj7ioA/exec';
+const SCRIPT_URL     = 'https://script.google.com/macros/s/AKfycbxx1ThJau1RNjBxnMf293vpsyPQffHNe7W-I5vvor0XdHvjKHvYXW-N8xSOUb4byycP7w/exec';
 const API_SECRET     = 'casita1!';       // must match Code.gs
 const SITE_PASSWORD  = 'casita1!';           // family site password
 const ADMIN_PASSWORD = 'casita-admin';     // change this to something private
@@ -765,7 +765,7 @@ function renderCalendar() {
     if (isPast)  el.classList.add('past');
 
     if (booking) {
-      const isMine = isAdmin || (booking.title.includes(guestName) && guestName);
+      const isMine = true; // everyone can edit/cancel any booking
       el.classList.add(isMine ? 'mine' : 'booked');
 
       // Span styling
@@ -832,7 +832,7 @@ function renderList() {
 
   list.innerHTML = '';
   upcoming.forEach(b => {
-    const isMine = isAdmin || (b.title.includes(guestName) && guestName);
+    const isMine = true; // everyone can edit/cancel any booking
     const s = new Date(b.start);
     const e = new Date(b.end);
     e.setDate(e.getDate() - 1);
